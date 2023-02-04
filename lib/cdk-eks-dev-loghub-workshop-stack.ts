@@ -15,15 +15,27 @@ export class CdkEksDevLoghubWorkshopStack extends Stack {
     });
 
     // Create the EKS Cluster
-    const clusterAdmin = new iam.Role(this, 'EKS-workshop-AdminRole', {
+    const clusterAdminRole = new iam.Role(this, 'EKSWorkshopAdminRole', {
       assumedBy: new iam.AccountRootPrincipal(),
     });
+
+    const clusterPolicy = new iam.Policy(this, "clusterPolicy", {
+      statements: [
+        new iam.PolicyStatement({
+          actions: [
+            '*'
+          ],
+          resources: ["*"],
+        }),
+      ],
+    });
+    clusterAdminRole.attachInlinePolicy(clusterPolicy);
 
     const cluster = new eks.Cluster(this, 'EKSCluster', {
       vpc,
       vpcSubnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
-      mastersRole: clusterAdmin,
-      defaultCapacity: 2,
+      mastersRole: clusterAdminRole,
+      defaultCapacity: 1,
       version: eks.KubernetesVersion.V1_24, // If using containerD, you need set to V1_24
       albController: {
         version: eks.AlbControllerVersion.V2_4_1,
@@ -61,7 +73,7 @@ export class CdkEksDevLoghubWorkshopStack extends Stack {
       kind: "Service",
       metadata: { name: "hello-kubernetes" },
       spec: {
-        type: "LoadBalancer",
+        type: "NodePort",
         ports: [{ port: 80, targetPort: 8080 }],
         selector: appLabel,
       }
@@ -76,8 +88,7 @@ export class CdkEksDevLoghubWorkshopStack extends Stack {
         "name": "hello-kubernetes",
         "annotations": {
           "kubernetes.io/ingress.class": "alb",
-          "external-dns.alpha.kubernetes.io/ttl": "30",
-          "nginx.ingress.kubernetes.io/client-body-buffer-size": "10m"
+          "alb.ingress.kubernetes.io/scheme": "internet-facing"
         }
       },
       "spec": {
@@ -104,7 +115,7 @@ export class CdkEksDevLoghubWorkshopStack extends Stack {
       }
     };
 
-    const manifest = cluster.addManifest('hello-kub', service, ingress, deployment);
+    const manifest = cluster.addManifest('hello-kub', deployment, service, ingress);
     manifest.node.addDependency(cluster.albController!);
   }
 
