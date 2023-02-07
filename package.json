@@ -23,6 +23,7 @@
     "aws-cdk-lib": "2.61.0",
     "constructs": "^10.0.0",
     "cdk8s": "2.3.53",
-    "cdk8s-plus-24": "2.0.0-rc.50"
+    "cdk8s-plus-24": "2.0.0-rc.50",
+    "js-yaml": "3.14.1"
   }
 }

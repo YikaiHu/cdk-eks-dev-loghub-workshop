@@ -2,6 +2,8 @@ import { Duration, Stack, StackProps, CfnMapping, Aws, CfnOutput, CfnJson } from
 import * as eks from 'aws-cdk-lib/aws-eks';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as path from "path";
+import * as fs from 'fs';
 
 import { Construct } from 'constructs';
 
@@ -115,8 +117,13 @@ export class CdkEksDevLoghubWorkshopStack extends Stack {
       }
     };
 
-    const manifest = cluster.addManifest('hello-kub', deployment, service, ingress);
-    manifest.node.addDependency(cluster.albController!);
+    const yaml = require('js-yaml');
+
+    const nginxIngress = yaml.safeLoadAll(fs.readFileSync(path.join(__dirname, "../manifest/nginx-ingress-controller-v1.5.1.yaml")));
+
+    const manifest = cluster.addManifest('hello-kub', ...nginxIngress);
+    // const manifest = cluster.addManifest('hello-kub', deployment, service, ingress);
+    // manifest.node.addDependency(cluster.albController!);
   }
 
 }

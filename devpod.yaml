@@ -1,0 +1,14 @@
+---
+# flog apache
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flog-apache
+spec:
+  containers:
+    - name: flog-apache
+      image: nginx:1.20
+      resources:
+        limits:
+          cpu: 200m
+          memory: 512Mi
